@@ -7,10 +7,10 @@ Start desired app, then run script with:
 python myAppNap.py [app name]
 Ex. python myAppNap.py Unity
 
-If no argument is given, defaults to Unity
+If no argument is given, will monitor apps in focus
 
 Tested in Mac OS Sierra
 
 TODO:
 Disallow suspending parent app (eg Terminal, if launched from Terminal)
-Wait until desired app is started before suspend (longer wait cycle? 5, 10s?)
+DONE - do nothing if invalid name given

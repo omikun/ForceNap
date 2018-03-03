@@ -1,6 +1,6 @@
 #!/usr/bin/python                                                                                            
 
-''' This script automatically finds PIDs for Unity (or some other app) 
+''' This script automatically finds PIDs for desiredApp
     and suspend those processes whenever desired app  is not in focus. 
     This script is meant to stay running and polls window focus every 1 second
     On receiving keyboard interrupt, will resume
@@ -10,24 +10,35 @@ from time import sleep
 import sys
 import subprocess
 
-def get_pid(name):
-    result = subprocess.check_output(['pgrep Unity'], shell=True)
-    return result.strip().split('\n')
-
-# if script invoked with an argument, use that as the pid
-desiredApp = 'Unity'
-if len(sys.argv) > 1:
-    desiredApp  = [sys.argv[1]]
-else:  # otherwise go find all pids associated with Unity
-    pids = get_pid(desiredApp)
-
-print "monitoring Unity, with PIDs:", pids, 
 try:
     from AppKit import NSWorkspace
 except ImportError:
     print "Can't import AppKit -- maybe you're running python from brew?"
     print "Try running with Apple's /usr/bin/python instead."
     exit(1)
+
+def get_pid(name):
+    try:
+        result = subprocess.check_output(['pgrep '+name], shell=True)
+        return result.strip().split('\n')
+    except:
+        print '''Invalid app name, will not suspend/resume anything
+        Will monitor apps in focus, switch to your desired app to see valid name'''
+        return None
+
+# if script invoked with an argument, use that as the pid
+desiredApp = 'asfjsadfjasdflkjasf'
+if len(sys.argv) > 1:
+    da = sys.argv[1]
+    if da == 'Terminal':
+        print 'Can\'t suspend Terminal, especially if you are calling from Terminal'
+    else:
+        desiredApp = da
+
+pids = get_pid(desiredApp)
+
+if pids:
+    print "Monitoring %s, with PIDs: %s" % (desiredApp, pids) 
 
 try:
     last_active_app = None
@@ -36,20 +47,24 @@ try:
         active_app = NSWorkspace.sharedWorkspace().activeApplication()
         if last_active_app != active_app['NSApplicationName']:
             last_active_app = active_app['NSApplicationName']
-            print "currently focused on", last_active_app
-            if last_active_app == 'Unity':
-                print "continuing Unity"
+            print "Currently focused on", last_active_app
+            if last_active_app == desiredApp:
                 stop = True
-                for pid in pids:
-                    subprocess.Popen("kill -CONT " + pid, shell=True)
+                if pids:
+                    print "Continuing", desiredApp
+                    for pid in pids:
+                        subprocess.Popen("kill -CONT " + pid, shell=True)
             elif stop:
                 stop = False
-                print "stopping unity"
-                for pid in pids:
-                    subprocess.Popen("kill -STOP " + pid, shell=True)
+                if pids:
+                    print "Stopping", desiredApp
+                    for pid in pids:
+                        subprocess.Popen("kill -STOP " + pid, shell=True)
         sleep(1)
 except KeyboardInterrupt:
-    print '\nresuming Unity, exiting script'
-    for pid in pids:
-        subprocess.Popen("kill -CONT " + pid, shell=True)
+    print '\nExiting script'
+    if pids:
+        print '\nResuming %s' % desiredApp
+        for pid in pids:
+            subprocess.Popen("kill -CONT " + pid, shell=True)
     sys.exit()
