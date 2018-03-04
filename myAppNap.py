@@ -9,6 +9,8 @@ from datetime import datetime
 from time import sleep
 import sys
 import subprocess
+import os
+import signal
 
 try:
     from AppKit import NSWorkspace
@@ -53,18 +55,18 @@ try:
                 if pids:
                     print "Continuing", desiredApp
                     for pid in pids:
-                        subprocess.Popen("kill -CONT " + pid, shell=True)
+                        os.kill(pid, signal.SIGCONT)
             elif stop:
                 stop = False
                 if pids:
                     print "Stopping", desiredApp
                     for pid in pids:
-                        subprocess.Popen("kill -STOP " + pid, shell=True)
+                        os.kill(pid, signal.SIGSTOP)
         sleep(1)
 except KeyboardInterrupt:
     print '\nExiting script'
     if pids:
         print '\nResuming %s' % desiredApp
         for pid in pids:
-            subprocess.Popen("kill -CONT " + pid, shell=True)
+            os.kill(pid, signal.SIGCONT)
     sys.exit()
