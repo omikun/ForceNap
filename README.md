@@ -13,5 +13,7 @@ Tested in Mac OS Sierra
 
 ## TODO:
 
-    Disallow suspending parent app (eg Terminal, if launched from Terminal)
+    Done - Disallow suspending Terminal (useful if you're launching from Terminal)
     DONE - do nothing if invalid name given
+    Integrate with rumps so this can be accessed from the status bar instead of terminal
+    Select multiple apps to nap at the same time
