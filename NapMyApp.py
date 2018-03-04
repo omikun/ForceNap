@@ -91,7 +91,7 @@ def suspend_bg_apps():
             suspend(prev_app)
         resume(app) 
         prev_app = app
-        time.sleep(0.5)
+        time.sleep(0.7)
 
 def suspend_my_apps(my_app_names):
     prev_app = None
@@ -115,6 +115,7 @@ def suspend_my_apps(my_app_names):
             if name_of(prev_app) in my_app_names:
                 suspend(prev_app)
             prev_app = app
+        time.sleep(0.7)
 
 def init_bar():
     launchedApps  = NSWorkspace.sharedWorkspace().launchedApplications()
