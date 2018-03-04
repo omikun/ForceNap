@@ -12,7 +12,6 @@ Start desired app, then run script with one or more app names:
 python NapMyApp.py [app name, ...]
 For example, so suspend Unity and Safari:
 *python NapMyApp.py Unity Safari*
-Catch
 
 If no argument is given, all defocused apps (apps that get focus then lose it) are automatically suspended.
 
