@@ -9,9 +9,9 @@ import signal
 import logging
 
 try:
-  from AppKit import NSWorkspace
+    from AppKit import NSWorkspace
 except ImportError:
-  print("Can't import AppKit -- maybe you're running python from brew?")
+    print("Can't import AppKit -- maybe you're running python from brew?")
   print("Try running with Apple's /usr/bin/python instead.")
   sys.exit(1)
 
@@ -20,23 +20,23 @@ logger = logging.getLogger()
 
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter(
-  '%(asctime)s %(levelname)s %(name)s: %(message)s', '%b %d %H:%M:%S')
+        '%(asctime)s %(levelname)s %(name)s: %(message)s', '%b %d %H:%M:%S')
 stdout = logging.StreamHandler(sys.stdout)
 stdout.setFormatter(formatter)
 logger.addHandler(stdout)
 
 
 def get_pids(app):
-  """Returns list of all process IDs for given application.
+    """Returns list of all process IDs for given application.
   """
   if not app:
-    return []
+      return []
   pid = app['NSApplicationProcessIdentifier']
   pids = [pid]
   try:
-    pids += map(int, subprocess.check_output(['pgrep', '-P %s' % pid]).split())
+      pids += map(int, subprocess.check_output(['pgrep', '-P %s' % pid]).split())
   except subprocess.CalledProcessError:
-    pass
+      pass
   return pids
 
 SUSPENDED = set()  #set of PIDs that has been suspended
@@ -44,30 +44,32 @@ SUSPEND_ME_NAME = set()  #set of apps user wants to suspend names
 DONT_SUSPEND_NAME = ('Terminal', 'Activity Monitor') #set of apps to never suspend/resume
 
 def name_of(app):
+    if app is None:
+        return None
   return app['NSApplicationName']
 
 def suspend(prev_app):
-  if name_of(prev_app) in DONT_SUSPEND_NAME:
-    print(name_of(prev_app) + ' not suspended, in dont suspend list')
+    if name_of(prev_app) in DONT_SUSPEND_NAME:
+        print(name_of(prev_app) + ' not suspended, in dont suspend list')
     return
-  pids = get_pids(prev_app)
+pids = get_pids(prev_app)
   logger.debug('Suspending %s (%s)', pids, name_of(prev_app))
   map(SUSPENDED.add, pids)
   map(lambda x: os.kill(x, signal.SIGSTOP), pids)
 
 
 def resume(app):
-  'Resume apps that have been suspende and arent on the do not suspend list'
+    'Resume apps that have been suspended and arent on the do not suspend list'
   if name_of(app) in DONT_SUSPEND_NAME: 
-    print(name_of(app) + ' not resumed, in dont suspend list')
+      print(name_of(app) + ' not resumed, in dont suspend list')
     return
 
-  pids = get_pids(app)
+pids = get_pids(app)
   for pid in pids:
-    if pid not in SUSPENDED:
-      break
+      if pid in SUSPENDED:
+          break
   else:
-    return
+      return
   # only resume pids that are suspended
   logger.debug('Resuming %s (%s)', pids, name_of(app))
   map(SUSPENDED.discard, pids)
@@ -76,41 +78,48 @@ def resume(app):
   map(lambda x: os.kill(x, signal.SIGCONT), pids)
 
 def suspend_bg_apps():
-  prev_app = None
+    prev_app = None
 
   while True:
-    app = NSWorkspace.sharedWorkspace().activeApplication()
+      app = NSWorkspace.sharedWorkspace().activeApplication()
     if prev_app is None:
-      prev_app = app
+        prev_app = app
     if prev_app and app != prev_app:
-      suspend(prev_app)
+        suspend(prev_app)
       resume(app) 
       prev_app = app
     time.sleep(0.5)
 
 def suspend_my_apps(my_app_names):
-  prev_app = None
+    prev_app = None
   my_apps = set()
-  
-  while True:
-    app = NSWorkspace.sharedWorkspace().activeApplication()
-    if prev_app != app:
-      prev_app = app
-      logger.debug('Currently focused on %s', name_of(app))
+
+  print("Suspending given apps that have been launched:")
+  launchedApps = NSWorkspace.sharedWorkspace().launchedApplications()
+  for app in launchedApps:
       if name_of(app) in my_app_names:
-        my_apps.add(app)
+          my_apps.add(app)
+      suspend(app)
+
+  print("In main loop:")
+  while True:
+      app = NSWorkspace.sharedWorkspace().activeApplication()
+    if prev_app != app:
+        logger.debug('Currently focused on %s', name_of(app))
+      if name_of(app) in my_app_names:
+          my_apps.add(app)  # in case app not launched initially
         resume(app)
-      else:
-        stop = False
-        for my_app in my_apps:
-          suspend(my_app)
-   
+    else:
+        if name_of(prev_app) in my_app_names:
+            suspend(prev_app)
+      prev_app = app
+
 def main():
-  if len(sys.argv) > 1:
-    my_apps = sys.argv[1:]
+    if len(sys.argv) > 1:
+        my_apps = sys.argv[1:]
     print(my_apps)
     suspend_my_apps(my_apps)
-  else:
+else:
     launchedApps  = NSWorkspace.sharedWorkspace().launchedApplications()
     appNames = [ app['NSApplicationName'] for app in launchedApps ]
     for appName in appNames:
@@ -118,8 +127,8 @@ def main():
     suspend_bg_apps()
 
 if __name__ == '__main__':
-  try:
-    main()
+    try:
+        main()
   except KeyboardInterrupt:
-    print('\nResuming all suspended apps')
+      print('\nResuming all suspended apps')
     map(lambda x: os.kill(x, signal.SIGCONT), SUSPENDED)
