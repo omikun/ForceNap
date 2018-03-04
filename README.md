@@ -1,11 +1,11 @@
-# MyAppNap
+# NapMyApp
 Suspend any one app when not in focus. Prints each app name in focus. On exit (ctrl-c), app will resume as normal.
 
 ## Usage:
 
 Start desired app, then run script with:
-python myAppNap.py [app name]
-Ex. *python myAppNap.py Unity*
+python NapMyApp.py [app name]
+Ex. *python NapMyApp.py Unity*
 
 If no argument is given, will monitor apps in focus
 
