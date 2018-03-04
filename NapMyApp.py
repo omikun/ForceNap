@@ -47,7 +47,11 @@ DONT_SUSPEND_NAME = ('Terminal', 'Activity Monitor') #set of apps to never suspe
 def name_of(app):
     if app is None:
         return None
-    return app['NSApplicationName']
+    app_name = app['NSApplicationName']
+    if sys.version_info.major < 3 and isinstance(app_name, unicode):
+        # TODO handle errors instead of ignoring them
+        app_name = app_name.encode("utf8", "ignore")
+    return app_name
 
 def suspend(prev_app):
     if name_of(prev_app) in DONT_SUSPEND_NAME:
