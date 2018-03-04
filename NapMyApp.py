@@ -57,7 +57,7 @@ def suspend(prev_app):
     logger.debug('Suspending %s (%s)', pids, name_of(prev_app))
     for pid in pids:
         SUSPENDED.add(pid)
-        os.kill(pid, signal.SIGSTOP)
+        os.kill(int(pid), signal.SIGSTOP)
 
 
 def resume(app):
@@ -76,9 +76,9 @@ def resume(app):
     logger.debug('Resuming %s (%s)', pids, name_of(app))
     for pid in pids:
         SUSPENDED.discard(pid)
-        os.kill(pid, signal.SIGCONT)
+        os.kill(int(pid), signal.SIGCONT)
     for pid in pids:
-        os.kill(pid, signal.SIGCONT)
+        os.kill(int(pid), signal.SIGCONT)
 
 def suspend_bg_apps():
     prev_app = None
@@ -167,5 +167,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('\nResuming all suspended apps')
         for pid in SUSPENDED:
-            os.kill(pid, signal.SIGCONT)
+            os.kill(int(pid), signal.SIGCONT)
 
