@@ -7,7 +7,7 @@ import subprocess
 import os
 import signal
 import logging
-#import rumps
+import rumps
 from threading import Thread
 
 try:
@@ -41,7 +41,6 @@ def get_pids(app):
     return pids
 
 SUSPENDED = set()  #set of PIDs that has been suspended
-SUSPEND_ME_NAME = set()  #set of apps user wants to suspend names
 DONT_SUSPEND_NAME = ('Terminal', 'Activity Monitor') #set of apps to never suspend/resume
 
 def name_of(app):
@@ -97,16 +96,14 @@ def suspend_bg_apps():
         prev_app = app
         time.sleep(0.7)
 
-def suspend_my_apps(my_app_names):
-    prev_app = None
-    my_apps = set()
-
+def suspend_launched_apps(launchedApps, my_app_names):
     print("Suspending given apps that have been launched:")
-    launchedApps = NSWorkspace.sharedWorkspace().launchedApplications()
     for app in launchedApps:
         if name_of(app) in my_app_names:
-            my_apps.add(app)
             suspend(app)
+
+def suspend_my_apps(my_app_names):
+    prev_app = None
 
     print("In main loop:")
     while True:
@@ -114,15 +111,14 @@ def suspend_my_apps(my_app_names):
         if prev_app != app:
             logger.debug('Currently focused on %s', name_of(app))
             if name_of(app) in my_app_names:
-                my_apps.add(app)  # in case app not launched initially
                 resume(app)
             if name_of(prev_app) in my_app_names:
                 suspend(prev_app)
             prev_app = app
         time.sleep(0.7)
 
-def init_bar():
-    launchedApps  = NSWorkspace.sharedWorkspace().launchedApplications()
+def init_bar(launchedApps):
+
     appNames = [ app['NSApplicationName'] for app in launchedApps ]
     print('Launched apps:', appNames)
     desiredApps = set()
@@ -147,18 +143,23 @@ def init_bar():
     return rumpsClass
 
 
-def main():
+useRumps = False  # debug flag
+def main(launchedApps):
     if len(sys.argv) > 1:
         my_app_names = sys.argv[1:]
         print(my_app_names)
-        #thread = Thread(target=suspend_my_apps, args=my_app_names)
-        #thread.start()
-        #init_bar()
-        #AwesomeStatusBarApp("NapMyApp").run()
-        #thread.join()
-        suspend_my_apps(my_app_names)
+        suspend_launched_apps(launchedApps, my_app_names)
+        if useRumps:
+            thread = Thread(target=suspend_my_apps, args=my_app_names)
+            try:
+                thread.start()
+            except:
+                print("Thread not working right")
+            AwesomeStatusBarApp("NapMyApp").run()
+            thread.join()
+        else:
+            suspend_my_apps(my_app_names)
     else:
-        launchedApps  = NSWorkspace.sharedWorkspace().launchedApplications()
         appNames = [ app['NSApplicationName'] for app in launchedApps ]
         for appName in appNames:
             print(appName)
@@ -166,8 +167,10 @@ def main():
 
 if __name__ == '__main__':
     try:
-        #exec(init_bar())
-        main()
+        launchedApps  = NSWorkspace.sharedWorkspace().launchedApplications()
+        if useRumps:
+            exec(init_bar(launchedApps))
+        main(launchedApps)
     except KeyboardInterrupt:
         print('\nResuming all suspended apps')
         for pid in SUSPENDED:
