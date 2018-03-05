@@ -66,7 +66,7 @@ rumpsClass += quit_menu
 exec(rumpsClass)
 
 def start_bar():
-    AwesomeStatusBarApp("NMA").run()
+    AwesomeStatusBarApp("RMN").run()
     for pid in SUSPENDED:
         os.kill(int(pid), signal.SIGCONT)
 
