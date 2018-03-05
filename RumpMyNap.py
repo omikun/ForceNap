@@ -23,7 +23,7 @@ DONT_SUSPEND_NAME = ('Terminal', 'Activity Monitor') #set of apps to never suspe
 launchedApps  = NSWorkspace.sharedWorkspace().launchedApplications()
 appNames = [ app['NSApplicationName'] for app in launchedApps ]
 print(appNames)
-desiredApps = set()
+desiredApp = None
 teststring = "hello world"
 
 def name_of(app):
@@ -35,16 +35,28 @@ def name_of(app):
         app_name = app_name.encode("utf8", "ignore")
     return app_name
 
+menuStates = {}
+
+def clearOtherStates(appName):
+    for k, v in menuStates.items():
+        if k == appName:
+            continue
+        v.state = False
 rumpsClass = \
 '''class AwesomeStatusBarApp(rumps.App):
 '''
 menuItemString =\
 '''    @rumps.clicked(%s)
     def onoff%d(self, sender):
+        global desiredApp
         sender.state = not sender.state
-        print(%s)
+        appName = %s
+        print(\'clicked on \',appName)
         if sender.state:
-            desiredApps.add(%s)
+            desiredApp = appName
+            menuStates[appName] = sender
+            clearOtherStates(appName)
+        print(desiredApp)
 '''
 quit_menu =\
 '''    @rumps.clicked('my quit')
@@ -57,9 +69,9 @@ quit_menu =\
 for i, launchedApp in enumerate(launchedApps):
     if name_of(launchedApp) in DONT_SUSPEND_NAME:
         continue
-    appStr = 'launchedApp[%d]' % i
+    #appStr = 'launchedApp[%d]' % i
     appNameStr = '\'%s\'' % name_of(launchedApp)
-    rumpsClass += menuItemString % (appNameStr, i, appNameStr, appStr)
+    rumpsClass += menuItemString % (appNameStr, i, appNameStr)
 
 rumpsClass += quit_menu
 #print(rumpsClass)
@@ -88,14 +100,15 @@ def otherThread():
         app = NSWorkspace.sharedWorkspace().activeApplication()
         if prev_app != app:
             print(app['NSApplicationName'])
-            if app['NSApplicationName'] == 'Messages':
+            print('checking if %s is %s' % (app['NSApplicationName'], desiredApp))
+            if app['NSApplicationName'] == desiredApp:
                 print("Continuing ", app['NSApplicationName'])
                 pids = get_pids(app)
                 for pid in pids:
                     os.kill(int(pid), signal.SIGCONT)
                 for pid in pids:
                     os.kill(int(pid), signal.SIGCONT)
-            if prev_app and prev_app['NSApplicationName'] == 'Messages':
+            if prev_app and prev_app['NSApplicationName'] == desiredApp:
                 print("Stopping ", prev_app['NSApplicationName'])
                 pids = get_pids(prev_app)
                 for pid in pids:
