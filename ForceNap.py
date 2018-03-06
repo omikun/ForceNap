@@ -98,7 +98,7 @@ def init_bar(launchedApps):
     return rumpsClass
 
 def start_bar():
-    sb_app = ForceNapBarApp('FN', quit_button=None)
+    sb_app = ForceNapBarApp('FN', icon='StatusBarIcon.png', quit_button=None)
     sb_app.run()
 
 def clean_exit():
