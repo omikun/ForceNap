@@ -8,7 +8,6 @@ import os
 import signal
 import logging
 import rumps
-import logging
 from threading import Thread
 
 try:
