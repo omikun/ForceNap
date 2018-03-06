@@ -68,7 +68,7 @@ def clearOtherStates(appName):
 
 def init_bar(launchedApps):
     rumpsClass = \
-'''class AwesomeStatusBarApp(rumps.App):
+'''class ForceNapBarApp(rumps.App):
 '''
     menuItemString =\
 '''    @rumps.clicked(%s)
@@ -82,7 +82,7 @@ def init_bar(launchedApps):
             # clearOtherStates(appName)
 '''
     quit_menu =\
-'''    @rumps.clicked('SAFE QUIT')
+'''    @rumps.clicked('Quit')
     def myquit(self, sender):
         print(\'Quiting with cleanup\')
         clean_exit()
@@ -99,7 +99,8 @@ def init_bar(launchedApps):
     return rumpsClass
 
 def start_bar():
-    AwesomeStatusBarApp("FN").run()
+    sb_app = ForceNapBarApp('FN', quit_button=None)
+    sb_app.run()
 
 def clean_exit():
     for pid in SUSPENDED:
