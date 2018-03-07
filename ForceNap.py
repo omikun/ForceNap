@@ -65,41 +65,44 @@ def clearOtherStates(appName):
             continue
         v.state = False
 
-def init_bar(launchedApps):
-    rumpsClass = \
-'''class ForceNapBarApp(rumps.App):
-'''
-    menuItemString =\
-'''    @rumps.clicked(%s)
-    def onoff%d(self, sender):
-        sender.state = not sender.state
-        appName = %s
-        print(\'clicked on \',appName)
-        update_state(sender.state, appName)
-        if sender.state:
-            menuStates[appName] = sender
-            # clearOtherStates(appName)
-'''
-    quit_menu =\
-'''    @rumps.clicked('Quit')
+class ForceNapBarApp(rumps.App):
+    @rumps.clicked('Quit')
     def myquit(self, sender):
-        print(\'Quiting with cleanup\')
+        print('Quiting with cleanup')
         clean_exit()
         rumps.quit_application()
-'''
-    for i, launchedApp in enumerate(launchedApps):
-        if name_of(launchedApp) in DONT_SUSPEND_NAME:
-            continue
-        #appStr = 'launchedApp[%d]' % i
-        appNameStr = '\'%s\'' % name_of(launchedApp)
-        rumpsClass += menuItemString % (appNameStr, i, appNameStr)
-    
-    rumpsClass += quit_menu
-    return rumpsClass
+
+def menu_item(appName):
+    def helper(sender):
+        sender.state = not sender.state
+        print ('clicked on', appName)
+        update_state(sender.state, appName)
+    return helper
+
+def refresh_list(menu):
+    def helper(sender):
+        print('just clicked refresh')
+        print('type of launchedApps:', type(launchedApps), type(launchedApps[0]))
+        #launchedApps.sort(key=lambda x: name_of(x))
+        for i, launchedApp in enumerate(launchedApps):
+            appName = name_of(launchedApp)
+            print('Adding', appName)
+            if appName in DONT_SUSPEND_NAME:
+                continue
+            # this doesn't add after the first click
+            # menu.insert_before('Quit', rumps.MenuItem(appName,
+            #                                         callback=menu_item(appName)))
+            # this will keep adding
+            menu.add(rumps.MenuItem(appName, callback=menu_item(appName)))
+            # todo: must only add new apps and remove old ones
+    return helper
+
 
 def start_bar():
-    sb_app = ForceNapBarApp('FN', quit_button=None)
-    sb_app.run()
+    app = ForceNapBarApp('FN', quit_button=None)
+    app.menu.add(rumps.MenuItem('Refresh', callback=refresh_list(app.menu)))
+    app.menu.add(rumps.separator)
+    app.run()
 
 def clean_exit():
     for pid in SUSPENDED:
@@ -187,7 +190,6 @@ if __name__ == '__main__':
         # TODO precaution: resume all launched apps in case last shutdown left some apps hanging
         logger = init_logger()
         launchedApps  = NSWorkspace.sharedWorkspace().launchedApplications()
-        exec(init_bar(launchedApps))
         thread = Thread(target=my_app_nap)
         thread.start()
         start_bar()
