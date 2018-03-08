@@ -20,8 +20,8 @@ except ImportError:
 SUSPENDED = set()  #set of PIDs that has been suspended
 DONT_SUSPEND_NAME = ('iTerm2', 'Terminal', 'Activity Monitor') #set of apps to never suspend/resume
 
-sucky_app_names = set()
-last_sucky_app_names = set()
+sucky_app_names = set()  # list of force napped apps
+last_sucky_app_names = set()  #list before settings update
 settings_updated = [False]
 # if user changes one or more settings in 1 tick:
 # in next tick
