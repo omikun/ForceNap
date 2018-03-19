@@ -23,11 +23,14 @@ This differs from App Nap which throttles and potentially stops apps, but only i
 ## Compile 
 You can also compile your own using [rumps](https://github.com/jaredks/rumps/blob/master/rumps/rumps.py) and py2app.
 
+    python setup.py py2app
+    
 ### Deprecated:
 Start desired app, then run script with one or more app names as arguments:`python nap_my_app.py app_name(s)`
 
 For example, to suspend Unity and Safari:
-`python nap_my_app.py Unity Safari`
+
+    python nap_my_app.py Unity Safari
 
 If no argument is given, all defocused apps (apps that get focus then lose it) are automatically suspended.
 
