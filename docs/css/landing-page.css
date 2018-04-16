@@ -84,6 +84,11 @@ header.masthead h1 {
   font-size: 5rem;
 }
 
+header.forcenap {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
 .testimonials {
   padding-top: 7rem;
   padding-bottom: 7rem;
